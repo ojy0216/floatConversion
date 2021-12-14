@@ -241,19 +241,31 @@ void convert(double n){
     /* Single Precision Calculation */
     s_sign = d_sign;
     s_mant = (uint32_t)shiftRound(d_mant, D_MANT_BIT - S_MANT_BIT);
-    if(d_mant == D_MANT_NAN){
-        // NaN
-        s_exp = S_EXP_MAX + S_BIAS;
-        s_mant = S_MANT_NAN;
+    if(d_exp == 0){
+        // 0, subnormal number -> 0
+        s_exp = 0u;
+        s_mant = 0u;
+    }
+    else if(d_exp == (D_EXP_MAX + D_BIAS)){
+        if(d_mant == D_MANT_NAN){
+            // NaN
+            s_exp = S_EXP_MAX + S_BIAS;
+            s_mant = S_MANT_NAN;
+        }
+        else{
+            // Inf
+            s_exp = S_EXP_MAX + S_BIAS;
+            s_mant = 0u;
+        }
     }
     else if(d_exp >= D_BIAS + S_EXP_MAX){
-        // Overflow -> inf
+        // Overflow -> Inf
         s_exp = S_EXP_MAX + S_BIAS;
         s_mant = 0u;
     }
     else if(d_exp <= D_BIAS + S_EXP_MIN){
         s_exp = 0u;
-        if(d_mant == 0u || (D_BIAS + S_EXP_MIN - d_exp >= (S_MANT_BIT + 1))){
+        if(d_mant == 0lu || (D_BIAS + S_EXP_MIN - d_exp >= (S_MANT_BIT + 1))){
             // Underflow -> 0
             s_mant = 0u;
         }
@@ -264,25 +276,38 @@ void convert(double n){
                 s_mant = (uint32_t)shiftRound((uint64_t)s_mant, D_BIAS + S_EXP_MIN - d_exp);
         }
     }
-    else
+    else{
         s_exp = (uint8_t)(d_exp - D_BIAS + S_BIAS);
+    }
 
     /* Half Precision Calculation */
     h_sign = d_sign;
     h_mant = (uint16_t)shiftRound(d_mant, D_MANT_BIT - H_MANT_BIT);
-    if(d_mant == D_MANT_NAN){
-        // NaN
-        h_exp = H_EXP_MAX + H_BIAS;
-        h_mant = H_MANT_NAN;
+    if(d_exp == 0){
+        // 0, subnormal number -> 0
+        h_exp = 0u;
+        h_mant = 0u;
+    }
+    else if(d_exp == (D_EXP_MAX + D_BIAS)){
+        if(d_mant == D_MANT_NAN){
+            // NaN
+            h_exp = H_EXP_MAX + H_BIAS;
+            h_mant = H_MANT_NAN;
+        }
+        else{
+            // Inf
+            h_exp = H_EXP_MAX + H_BIAS;
+            h_mant = 0u;
+        }
     }
     else if(d_exp >= D_BIAS + H_EXP_MAX){
-        // Overflow -> inf
+        // Overflow -> Inf
         h_exp = H_EXP_MAX + H_BIAS;
         h_mant = 0u;
     }
     else if(d_exp <= D_BIAS + H_EXP_MIN){
         h_exp = 0u;
-        if(d_mant == 0u || (D_BIAS + H_EXP_MIN - d_exp >= (H_MANT_BIT + 1))){
+        if(d_mant == 0lu || (D_BIAS + H_EXP_MIN - d_exp >= (H_MANT_BIT + 1))){
             // Underflow -> 0
             h_mant = 0u;
         }
@@ -293,27 +318,40 @@ void convert(double n){
                 h_mant = (uint16_t)shiftRound((uint64_t)h_mant, D_BIAS + H_EXP_MIN - d_exp);
         }
     }
-    else
+    else{
         h_exp = (uint8_t)(d_exp - D_BIAS + H_BIAS);
+    }
 
     /* bfloat16 Calculation */
     b_sign = d_sign;
     b_mant = (uint8_t)shiftRound(d_mant, D_MANT_BIT - B_MANT_BIT);
-    if(d_mant == D_MANT_NAN){
-        // NaN
-        b_exp = B_EXP_MAX + B_BIAS;
-        b_mant = B_MANT_NAN;
+    if(d_exp == 0){
+        // 0, subnormal number -> 0
+        b_exp = 0u;
+        b_mant = 0u;
+    }
+    else if(d_exp == (D_EXP_MAX + D_BIAS)){
+        if(d_mant == D_MANT_NAN){
+            // NaN
+            b_exp = B_EXP_MAX + B_BIAS;
+            b_mant = B_MANT_NAN;
+        }
+        else{
+            // Inf
+            b_exp = B_EXP_MAX + B_BIAS;
+            b_mant = 0u;
+        }
     }
     else if(d_exp >= D_BIAS + B_EXP_MAX){
-        // Overflow -> inf
+        // Overflow -> Inf
         b_exp = B_EXP_MAX + B_BIAS;
         b_mant = 0u;
     }
     else if(d_exp <= D_BIAS + B_EXP_MIN){
         b_exp = 0u;
-        if(d_mant == 0u || (D_BIAS + B_EXP_MIN - d_exp >= (B_MANT_BIT + 1))){
+        if(d_mant == 0lu || (D_BIAS + B_EXP_MIN - d_exp >= (B_MANT_BIT + 1))){
             // Underflow -> 0
-            b_mant = 0u;    
+            b_mant = 0u;
         }
         else{
             // Subnormal number
@@ -322,8 +360,9 @@ void convert(double n){
                 b_mant = (uint8_t)shiftRound((uint64_t)b_mant, D_BIAS + B_EXP_MIN - d_exp);
         }
     }
-    else
+    else{
         b_exp = (uint8_t)(d_exp - D_BIAS + B_BIAS);
+    }
 
     printHalfPrecision(h_sign, h_exp, h_mant);
     printSinglePrecision(s_sign, s_exp, s_mant);
