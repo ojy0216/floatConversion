@@ -60,16 +60,40 @@
 
 #define D_MANT_NAN  0x0008000000000000
 
+typedef struct _BF16{
+    uint8_t sign;
+    uint8_t exp;
+    uint8_t mant;
+} BF16;
+
+typedef struct _FP16{
+    uint8_t sign;
+    uint8_t exp;
+    uint16_t mant;
+} FP16;
+
+typedef struct _FP32{
+    uint8_t sign;
+    uint16_t exp;
+    uint32_t mant;
+} FP32;
+
+typedef struct _FP64{
+    uint8_t sign;
+    uint16_t exp;
+    uint64_t mant;
+} FP64;
+
 /* Function Declaration */
 uint64_t shiftRound(uint64_t n, int shift);
 
-void bf2single(uint8_t sign, uint8_t exp, uint8_t mant);
-void half2single(uint8_t sign, uint8_t exp, uint16_t mant);
+void bf2single(BF16* f);
+void half2single(FP16* f);
 
-void printBF16(uint8_t sign, uint8_t exp, uint8_t mant);
-void printHalfPrecision(uint8_t sign, uint8_t exp, uint16_t mant);
-void printSinglePrecision(uint8_t sign, uint8_t exp, uint32_t mant);
-void printDoublePrecision(uint8_t sign, uint16_t exp, uint64_t mant);
+void printBF16(BF16* f);
+void printHalfPrecision(FP16* f);
+void printSinglePrecision(FP32* f);
+void printDoublePrecision(FP64* f);
 
 void convert(double n);
 
