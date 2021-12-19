@@ -15,6 +15,10 @@
 #define B_EXP_MAX   B_BIAS + 1
 #define B_EXP_MIN   -B_BIAS
 
+#define B_SIGN_MASK 0x8000
+#define B_EXP_MASK  0x7F80
+#define B_MANT_MASK 0x007F
+
 /* Half Precision */
 #define H_SIGN_BIT  1
 #define H_EXP_BIT   5
@@ -27,6 +31,10 @@
 #define H_EXP_MAX   H_BIAS + 1
 #define H_EXP_MIN   -H_BIAS
 
+#define H_SIGN_MASK 0x8000
+#define H_EXP_MASK  0x7C00
+#define H_MANT_MASK 0x03FF
+
 /* Single Precision */
 #define S_SIGN_BIT  1
 #define S_EXP_BIT   8
@@ -37,10 +45,12 @@
 #define S_EXP_MAX   S_BIAS + 1
 #define S_EXP_MIN   -S_BIAS
 
+#define S_SIGN_MASK 0x80000000
+#define S_EXP_MASK  0x7F800000
+#define S_MANT_MASK  0x007FFFFF
+
 #define H2S_MASK    0x00000000007FE000
 #define B2S_MASK    0x00000000007F0000
-
-#define S_MANT_MASK 0x000FFFFFE0000000
 
 #define S_MANT_NAN  0x0000000000400000
 
@@ -59,6 +69,9 @@
 #define D_MANT_MASK 0x000FFFFFFFFFFFFF
 
 #define D_MANT_NAN  0x0008000000000000
+
+#define B2D_MASK    0x000FE00000000000
+#define H2D_MASK    0x000FFC0000000000
 
 typedef struct _BF16{
     uint8_t sign;
@@ -87,13 +100,24 @@ typedef struct _FP64{
 /* Function Declaration */
 uint64_t shiftRound(uint64_t n, int shift);
 
-void bf2single(BF16* f);
-void half2single(FP16* f);
+void printBF2Float(BF16* f);
+void printHP2Float(FP16* f);
 
 void printBF16(BF16* f);
 void printHalfPrecision(FP16* f);
 void printSinglePrecision(FP32* f);
 void printDoublePrecision(FP64* f);
+
+BF16* disassembleBF(uint16_t n);
+FP16* disassembleHP(uint16_t n);
+FP32* disassembleSP(uint32_t n);
+
+uint64_t assembleDP(FP64* dp);
+
+double hexBF2Double(uint16_t n);
+double hexHP2Double(uint16_t n);
+double hexSP2Double(uint32_t n);
+double hexDP2Double(uint64_t n);
 
 void convert(double n);
 

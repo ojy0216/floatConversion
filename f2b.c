@@ -62,7 +62,7 @@ uint64_t shiftRound(uint64_t n, int shift){
     return result;
 }
 
-void bf2single(BF16* f){
+void printBF2Float(BF16* f){
     uint32_t bf;
     float fp;
 
@@ -77,7 +77,7 @@ void bf2single(BF16* f){
     printf("%0.95e\n\n", fp);
 }
 
-void half2single(FP16* f){
+void printHP2Float(FP16* f){
     uint32_t bf;
     float fp;
 
@@ -139,7 +139,7 @@ void printBF16(BF16* f){
     printf(" (%u)\n", f->mant);
 
     printf("0x%04X\n", bf);
-    bf2single(f);
+    printBF2Float(f);
 }
 
 void printHalfPrecision(FP16* f){
@@ -160,7 +160,7 @@ void printHalfPrecision(FP16* f){
     printf(" (%u)\n", f->mant);
 
     printf("0x%04X\n", hp);
-    half2single(f);
+    printHP2Float(f);
 }
 
 void printSinglePrecision(FP32* f){
@@ -206,6 +206,179 @@ void printDoublePrecision(FP64* f){
     printf(" (%lu)\n", f->mant);
 
     printf("0x%016lX\n\n", dp);
+}
+
+BF16* disassembleBF(uint16_t n){
+    BF16* bf = malloc(sizeof(BF16));
+
+    bf->sign = (uint8_t)((n & B_SIGN_MASK) >> (B_EXP_BIT + B_MANT_BIT));
+    bf->exp = (uint8_t)((n & B_EXP_MASK) >> B_MANT_BIT);
+    bf->mant = (uint8_t)(n & B_MANT_MASK);
+
+    return bf;
+}
+
+FP16* disassembleHP(uint16_t n){
+    FP16* hp = malloc(sizeof(FP16));
+
+    hp->sign = (uint8_t)((n & H_SIGN_MASK) >> (H_EXP_BIT + H_MANT_BIT));
+    hp->exp = (uint8_t)((n & H_EXP_MASK) >> H_MANT_BIT);
+    hp->mant = n & H_MANT_MASK;
+
+    return hp;
+}
+
+FP32* disassembleSP(uint32_t n){
+    FP32* sp = malloc(sizeof(FP32));
+
+    sp->sign = (uint8_t)((n & S_SIGN_MASK) >> (S_EXP_BIT + S_MANT_BIT));
+    sp->exp = (uint16_t)((n & S_EXP_MASK) >> S_MANT_BIT);
+    sp->mant = n & S_MANT_MASK;
+
+    return sp;
+}
+
+FP64* disassembleDP(uint64_t n){
+    FP64* dp = malloc(sizeof(FP64));
+
+    dp->sign = (uint8_t)((n & D_SIGN_MASK) >> (D_EXP_BIT + D_MANT_BIT));
+    dp->exp = (uint16_t)((n & D_EXP_MASK) >> D_MANT_BIT);
+    dp->mant = n & D_MANT_MASK;
+
+    return dp;
+}
+
+double hexBF2Double(uint16_t n){
+    BF16* bf = disassembleBF(n);
+    FP64* dp = malloc(sizeof(FP64));
+    uint64_t d_bin;
+    double d;
+
+    dp->sign = bf->sign;
+    dp->exp = (uint16_t)bf->exp - B_BIAS + D_BIAS;
+    dp->mant = (uint64_t)bf->mant << (D_MANT_BIT - B_MANT_BIT);
+
+    if(bf->exp == 0u){
+        if(bf->mant == 0u){
+            // 0
+            dp->exp = 0u;
+            dp->mant = 0lu;
+        }
+        else{
+            // Subnormal number
+            while(!(dp->mant & D_MANT_NAN)){
+                dp->mant <<= 1;
+                dp->exp--;
+            }
+            dp->mant <<= 1;
+            dp->mant = dp->mant & B2D_MASK;
+        }
+    }
+    else if(bf->exp == (B_EXP_MAX + B_BIAS)){
+        dp->exp = D_EXP_MAX + D_BIAS;
+        if(bf->mant == B_MANT_NAN){
+            // NaN
+            dp->mant = D_MANT_NAN;
+        }
+        else{
+            // Inf
+            dp->mant = 0lu;
+        }
+    }
+
+    free(bf);
+
+    d_bin = assembleDP(dp);
+
+    free(dp);
+
+    memcpy(&d, &d_bin, sizeof(d));
+
+    return d;
+}
+
+double hexHP2Double(uint16_t n){
+    FP16* hp = disassembleHP(n);
+    FP64* dp = malloc(sizeof(FP64));
+    uint64_t d_bin;
+    double d;
+
+    dp->sign = hp->sign;
+    dp->exp = (uint16_t)hp->exp - H_BIAS + D_BIAS;
+    dp->mant = (uint64_t)hp->mant << (D_MANT_BIT - H_MANT_BIT);
+
+    if(hp->exp == 0u){
+        if(hp->mant == 0u){
+            // 0
+            dp->exp = 0u;
+            dp->mant = 0lu;
+        }
+        else{
+            // Subnormal number
+            while(!(dp->mant & D_MANT_NAN)){
+                dp->mant <<= 1;
+                dp->exp--;
+            }
+            dp->mant <<= 1;
+            dp->mant = dp->mant & H2D_MASK;
+        }
+    }
+    else if(hp->exp == (H_EXP_MAX + H_BIAS)){
+        dp->exp = D_EXP_MAX + D_BIAS;
+        if(hp->mant == H_MANT_NAN){
+            // NaN
+            dp->mant = D_MANT_NAN;
+        }
+        else{
+            // Inf
+            dp->mant = 0lu;
+        }
+    }
+
+    free(hp);
+
+    d_bin = assembleDP(dp);
+
+    free(dp);
+
+    memcpy(&d, &d_bin, sizeof(d));
+
+    return d;
+}
+
+double hexSP2Double(uint32_t n){
+    FP32* sp = disassembleSP(n);
+    FP64* dp = malloc(sizeof(FP64));
+    uint64_t d_bin;
+    double d;
+
+    dp->sign = sp->sign;
+    dp->exp = (uint16_t)sp->exp - S_BIAS + D_BIAS;
+    dp->mant = (uint64_t)sp->mant << (D_MANT_BIT - S_MANT_BIT);
+
+    free(sp);
+
+    d_bin = assembleDP(dp);
+
+    free(dp);
+
+    memcpy(&d, &d_bin, sizeof(d));
+
+    return d;
+}
+
+double hexDP2Double(uint64_t n){
+    double d;
+
+    memcpy(&d, &n, sizeof(d));
+
+    return d;
+}
+
+uint64_t assembleDP(FP64* dp){
+    uint64_t dn = ((uint64_t)dp->sign << (D_EXP_BIT + D_MANT_BIT)) | ((uint64_t)dp->exp << D_MANT_BIT) | dp->mant;
+
+    return dn;
 }
 
 void convert(double n){
@@ -257,15 +430,14 @@ void convert(double n){
     }
     else if(dp->exp <= D_BIAS + S_EXP_MIN){
         sp->exp = 0u;
-        if(dp->mant == 0lu || (D_BIAS + S_EXP_MIN - dp->exp >= (S_MANT_BIT + 1))){
+        if(D_BIAS + S_EXP_MIN - dp->exp >= (S_MANT_BIT + 1)){
             // Underflow -> 0
             sp->mant = 0u;
         }
         else{
             // Subnormal number
             sp->mant = (sp->mant >> 1) | S_MANT_NAN;
-            if(D_BIAS + S_EXP_MIN - dp->exp > 0)
-                sp->mant = (uint32_t)shiftRound((uint64_t)sp->mant, D_BIAS + S_EXP_MIN - dp->exp);
+            sp->mant >>= ((-S_BIAS + 1) - (dp->exp - D_BIAS + 1));
         }
     }
     else{
@@ -299,15 +471,14 @@ void convert(double n){
     }
     else if(dp->exp <= D_BIAS + H_EXP_MIN){
         hp->exp = 0u;
-        if(dp->mant == 0lu || (D_BIAS + H_EXP_MIN - dp->exp >= (H_MANT_BIT + 1))){
+        if(D_BIAS + H_EXP_MIN - dp->exp >= (H_MANT_BIT + 1)){
             // Underflow -> 0
             hp->mant = 0u;
         }
         else{
             // Subnormal number
             hp->mant = (hp->mant >> 1) | H_MANT_NAN;
-            if(D_BIAS + H_EXP_MIN - dp->exp > 0)
-                hp->mant = (uint16_t)shiftRound((uint64_t)hp->mant, D_BIAS + H_EXP_MIN - dp->exp);
+            hp->mant >>= ((-H_BIAS + 1) - (dp->exp - D_BIAS + 1));
         }
     }
     else{
@@ -341,15 +512,14 @@ void convert(double n){
     }
     else if(dp->exp <= D_BIAS + B_EXP_MIN){
         bf->exp = 0u;
-        if(dp->mant == 0lu || (D_BIAS + B_EXP_MIN - dp->exp >= (B_MANT_BIT + 1))){
+        if(D_BIAS + B_EXP_MIN - dp->exp >= (B_MANT_BIT + 1)){
             // Underflow -> 0
             bf->mant = 0u;
         }
         else{
             // Subnormal number
             bf->mant = (bf->mant >> 1) | B_MANT_NAN;
-            if(D_BIAS + B_EXP_MIN - dp->exp > 0)
-                bf->mant = (uint8_t)shiftRound((uint64_t)bf->mant, D_BIAS + B_EXP_MIN - dp->exp);
+            bf->mant >>= ((-B_BIAS + 1) - (dp->exp - D_BIAS + 1));
         }
     }
     else{
