@@ -101,24 +101,35 @@ typedef struct _FP64{
 /* Function Declaration */
 uint64_t shiftRound(uint64_t n, int shift);
 
-void printBF2Float(BF16* f);
-void printHP2Float(FP16* f);
+void printBF2Float(BF16* bf);
+void printHP2Float(FP16* hp);
 
-void printBF16(BF16* f);
-void printHalfPrecision(FP16* f);
-void printSinglePrecision(FP32* f);
-void printDoublePrecision(FP64* f);
+void printBF16(BF16* bf);
+void printHalfPrecision(FP16* hp);
+void printSinglePrecision(FP32* sp);
+void printDoublePrecision(FP64* dp);
 
-BF16* disassembleBF(uint16_t n);
-FP16* disassembleHP(uint16_t n);
-FP32* disassembleSP(uint32_t n);
+BF16* disassembleHexBF(uint16_t n);
+FP16* disassembleHexHP(uint16_t n);
+FP32* disassembleHexSP(uint32_t n);
+FP64* disassembleHexDP(uint64_t n);
 
+uint32_t assembleSP(FP32* sp);
 uint64_t assembleDP(FP64* dp);
+
+float hexSP2Float(uint32_t n);
 
 double hexBF2Double(uint16_t n);
 double hexHP2Double(uint16_t n);
 double hexSP2Double(uint32_t n);
 double hexDP2Double(uint64_t n);
+
+FP32* DP2SP(FP64* dp);
+FP16* DP2HP(FP64* dp);
+BF16* DP2BF(FP64* dp);
+
+FP32* BF2SP(BF16* bf);
+FP32* HP2SP(FP16* hp);
 
 void convert(double n);
 

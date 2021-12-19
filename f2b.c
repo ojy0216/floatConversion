@@ -62,153 +62,114 @@ uint64_t shiftRound(uint64_t n, int shift){
     return result;
 }
 
-void printBF2Float(BF16* f){
-    uint32_t bf;
-    float fp;
+void printBF2Float(BF16* bf){
+    FP32* sp = BF2SP(bf);
 
-	uint8_t sign = f->sign;
-	uint8_t exp = f->exp;
-	uint32_t mant = (uint32_t)f->mant << (S_MANT_BIT - B_MANT_BIT);
+    float f = hexSP2Float(assembleSP(sp));
 
-    bf = ((uint32_t)sign << (S_EXP_BIT + S_MANT_BIT)) | ((uint32_t)exp << S_MANT_BIT) | mant;
+    free(sp);
 
-    memcpy(&fp, &bf, sizeof(fp));
-
-    printf("%0.95e\n\n", fp);
+    printf("%0.95e\n\n", f);
 }
 
-void printHP2Float(FP16* f){
-    uint32_t bf;
-    float fp;
+void printHP2Float(FP16* hp){
+    FP32* sp = HP2SP(hp);
 
-    uint8_t sign = f->sign;
-    uint8_t exp = f->exp - H_BIAS + S_BIAS;
-    uint32_t mant = (uint32_t)f->mant << (S_MANT_BIT - H_MANT_BIT);
+    float f = hexSP2Float(assembleSP(sp));
 
-    if(f->exp == 0u){
-        if(f->mant == 0u){
-            // Underflow
-            exp = 0u;
-            mant = 0u;
-        }
-        else{
-            // Subnormal number dealing
-            while(!(mant & S_MANT_NAN)){
-                mant <<= 1;
-                exp--;
-            }
-            mant <<= 1;
-            mant = mant & H2S_MASK;
-        }
-    }
-    else if(f->exp == (H_EXP_MAX + H_BIAS)){
-        if(f->mant == H_MANT_NAN){
-            // NaN
-            exp = S_EXP_MAX + S_BIAS;
-            mant = S_MANT_NAN;
-        }
-        else{
-            // Inf
-            exp = S_EXP_MAX + S_BIAS;
-            mant = 0u;
-        }
-    }
+    free(sp);
 
-    bf = ((uint32_t)sign << (S_EXP_BIT + S_MANT_BIT)) | ((uint32_t)exp << S_MANT_BIT) | mant;
-
-    memcpy(&fp, &bf, sizeof(fp));
-
-    printf("%0.19e\n\n", fp);
+    printf("%0.19e\n\n", f);
 }
 
-void printBF16(BF16* f){
-    uint16_t bf = (f->sign << (B_EXP_BIT + B_MANT_BIT)) | (f->exp << B_MANT_BIT) | f->mant;
+void printBF16(BF16* bf){
+    uint16_t bn = (bf->sign << (B_EXP_BIT + B_MANT_BIT)) | (bf->exp << B_MANT_BIT) | bf->mant;
 
 	printf("[bfloat16]\n");
 
-    printf("Sign : %u\n", f->sign);
+    printf("Sign : %u\n", bf->sign);
 
     printf("Exponent : ");
     for(int i = 0; i < B_EXP_BIT; i++)
-        printf("%u", (f->exp & ((uint8_t)1 << (B_EXP_BIT - 1 - i))) != 0);
-    printf(" (%u)\n", f->exp);
+        printf("%u", (bf->exp & ((uint8_t)1 << (B_EXP_BIT - 1 - i))) != 0);
+    printf(" (%u)\n", bf->exp);
 
     printf("Mantissa : ");
     for(int i = 0; i < B_MANT_BIT; i++)
-        printf("%u", (f->mant & ((uint8_t)1 << (B_MANT_BIT - 1 - i))) != 0);
-    printf(" (%u)\n", f->mant);
+        printf("%u", (bf->mant & ((uint8_t)1 << (B_MANT_BIT - 1 - i))) != 0);
+    printf(" (%u)\n", bf->mant);
 
-    printf("0x%04X\n", bf);
-    printBF2Float(f);
+    printf("0x%04X\n", bn);
+    printBF2Float(bf);
 }
 
-void printHalfPrecision(FP16* f){
-    uint16_t hp = (f->sign << (H_EXP_BIT + H_MANT_BIT)) | (f->exp << H_MANT_BIT) | f->mant;
+void printHalfPrecision(FP16* hp){
+    uint16_t hn = (hp->sign << (H_EXP_BIT + H_MANT_BIT)) | (hp->exp << H_MANT_BIT) | hp->mant;
 
     printf("[Half Precision]\n");
 
-    printf("Sign : %u\n", f->sign);
+    printf("Sign : %u\n", hp->sign);
 
     printf("Exponent : ");
     for(int i = 0; i < H_EXP_BIT; i++)
-        printf("%u", (f->exp & ((uint8_t)1 << (H_EXP_BIT - 1 - i))) != 0);
-    printf(" (%u)\n", f->exp);
+        printf("%u", (hp->exp & ((uint8_t)1 << (H_EXP_BIT - 1 - i))) != 0);
+    printf(" (%u)\n", hp->exp);
 
     printf("Mantissa : ");
     for(int i = 0; i < H_MANT_BIT; i++)
-        printf("%u", (f->mant & ((uint16_t)1 << (H_MANT_BIT - 1 - i))) != 0);
-    printf(" (%u)\n", f->mant);
+        printf("%u", (hp->mant & ((uint16_t)1 << (H_MANT_BIT - 1 - i))) != 0);
+    printf(" (%u)\n", hp->mant);
 
-    printf("0x%04X\n", hp);
-    printHP2Float(f);
+    printf("0x%04X\n", hn);
+    printHP2Float(hp);
 }
 
-void printSinglePrecision(FP32* f){
-    float fp;
-    uint32_t sp = (f->sign << (S_EXP_BIT + S_MANT_BIT)) | (f->exp << S_MANT_BIT) | f->mant;
+void printSinglePrecision(FP32* sp){
+    float f;
+    uint32_t sn = (sp->sign << (S_EXP_BIT + S_MANT_BIT)) | (sp->exp << S_MANT_BIT) | sp->mant;
 
     printf("[Single Precision]\n");
 
-    printf("Sign : %u\n", f->sign);
+    printf("Sign : %u\n", sp->sign);
 
     printf("Exponent : ");
     for(int i = 0; i < S_EXP_BIT; i++)
-        printf("%u", (f->exp & ((uint8_t)1 << (S_EXP_BIT - 1 - i))) != 0);
-    printf(" (%u)\n", f->exp);
+        printf("%u", (sp->exp & ((uint8_t)1 << (S_EXP_BIT - 1 - i))) != 0);
+    printf(" (%u)\n", sp->exp);
 
     printf("Mantissa : ");
     for(int i = 0; i < S_MANT_BIT; i++)
-        printf("%u", (f->mant & ((uint32_t)1 << (S_MANT_BIT - 1 - i))) != 0);
-    printf(" (%u)\n", f->mant);
+        printf("%u", (sp->mant & ((uint32_t)1 << (S_MANT_BIT - 1 - i))) != 0);
+    printf(" (%u)\n", sp->mant);
 
-    printf("0x%08X\n", sp);
+    printf("0x%08X\n", sn);
 
-    memcpy(&fp, &sp, sizeof(fp));
+    memcpy(&f, &sn, sizeof(f));
 
-    printf("%0.111e\n\n", fp);
+    printf("%0.111e\n\n", f);
 }
 
-void printDoublePrecision(FP64* f){
-    uint64_t dp = ((uint64_t)f->sign << (D_EXP_BIT + D_MANT_BIT)) | ((uint64_t)f->exp << D_MANT_BIT) | f->mant;
+void printDoublePrecision(FP64* dp){
+    uint64_t dn = ((uint64_t)dp->sign << (D_EXP_BIT + D_MANT_BIT)) | ((uint64_t)dp->exp << D_MANT_BIT) | dp->mant;
 
     printf("[Double Precision]\n");
 
-    printf("Sign : %u\n", f->sign);
+    printf("Sign : %u\n", dp->sign);
 
     printf("Exponent : ");
     for(int i = 0; i < D_EXP_BIT; i++)
-        printf("%u", (f->exp & ((uint16_t)1 << (D_EXP_BIT - 1 - i))) != 0);
-    printf(" (%u)\n", f->exp);
+        printf("%u", (dp->exp & ((uint16_t)1 << (D_EXP_BIT - 1 - i))) != 0);
+    printf(" (%u)\n", dp->exp);
 
     printf("Mantissa : ");
     for(int i = 0; i < D_MANT_BIT; i++)
-        printf("%u", (f->mant & ((uint64_t)1 << (D_MANT_BIT - 1 - i))) != 0);
-    printf(" (%lu)\n", f->mant);
+        printf("%u", (dp->mant & ((uint64_t)1 << (D_MANT_BIT - 1 - i))) != 0);
+    printf(" (%lu)\n", dp->mant);
 
-    printf("0x%016lX\n\n", dp);
+    printf("0x%016lX\n\n", dn);
 }
 
-BF16* disassembleBF(uint16_t n){
+BF16* disassembleHexBF(uint16_t n){
     BF16* bf = malloc(sizeof(BF16));
 
     bf->sign = (uint8_t)((n & B_SIGN_MASK) >> (B_EXP_BIT + B_MANT_BIT));
@@ -218,7 +179,7 @@ BF16* disassembleBF(uint16_t n){
     return bf;
 }
 
-FP16* disassembleHP(uint16_t n){
+FP16* disassembleHexHP(uint16_t n){
     FP16* hp = malloc(sizeof(FP16));
 
     hp->sign = (uint8_t)((n & H_SIGN_MASK) >> (H_EXP_BIT + H_MANT_BIT));
@@ -228,7 +189,7 @@ FP16* disassembleHP(uint16_t n){
     return hp;
 }
 
-FP32* disassembleSP(uint32_t n){
+FP32* disassembleHexSP(uint32_t n){
     FP32* sp = malloc(sizeof(FP32));
 
     sp->sign = (uint8_t)((n & S_SIGN_MASK) >> (S_EXP_BIT + S_MANT_BIT));
@@ -236,6 +197,16 @@ FP32* disassembleSP(uint32_t n){
     sp->mant = n & S_MANT_MASK;
 
     return sp;
+}
+
+FP64* disassembleHexDP(uint64_t n){
+    FP64* dp = malloc(sizeof(FP64));
+
+    dp->sign = (uint8_t)((n & D_SIGN_MASK) >> (D_EXP_BIT + D_MANT_BIT));
+    dp->exp = (uint16_t)((n & D_EXP_MASK) >> D_MANT_BIT);
+    dp->mant = n & D_MANT_MASK;
+
+    return dp;
 }
 
 FP64* disassembleDP(uint64_t n){
@@ -248,8 +219,16 @@ FP64* disassembleDP(uint64_t n){
     return dp;
 }
 
+float hexSP2Float(uint32_t n){
+    float f;
+
+    memcpy(&f, &n, sizeof(f));
+
+    return f;
+}
+
 double hexBF2Double(uint16_t n){
-    BF16* bf = disassembleBF(n);
+    BF16* bf = disassembleHexBF(n);
     FP64* dp = malloc(sizeof(FP64));
     uint64_t d_bin;
     double d;
@@ -298,7 +277,7 @@ double hexBF2Double(uint16_t n){
 }
 
 double hexHP2Double(uint16_t n){
-    FP16* hp = disassembleHP(n);
+    FP16* hp = disassembleHexHP(n);
     FP64* dp = malloc(sizeof(FP64));
     uint64_t d_bin;
     double d;
@@ -347,8 +326,7 @@ double hexHP2Double(uint16_t n){
 }
 
 double hexSP2Double(uint32_t n){
-    // TODO
-    FP32* sp = disassembleSP(n);
+    FP32* sp = disassembleHexSP(n);
     FP64* dp = malloc(sizeof(FP64));
     uint64_t d_bin;
     double d;
@@ -404,37 +382,24 @@ double hexDP2Double(uint64_t n){
     return d;
 }
 
+uint32_t assembleSP(FP32* sp){
+    uint32_t sn = ((uint32_t)sp->sign << (S_EXP_BIT + S_MANT_BIT)) | ((uint32_t)sp->exp << S_MANT_BIT) | sp->mant;
+
+    return sn;
+}
+
 uint64_t assembleDP(FP64* dp){
     uint64_t dn = ((uint64_t)dp->sign << (D_EXP_BIT + D_MANT_BIT)) | ((uint64_t)dp->exp << D_MANT_BIT) | dp->mant;
 
     return dn;
 }
 
-void convert(double n){
-    uint64_t dn;
-
-    /* Double Precision */
-    FP64* dp = malloc(sizeof(FP64));
-
-    /* Single Precision */
+FP32* DP2SP(FP64* dp){
     FP32* sp = malloc(sizeof(FP32));
 
-    /* Half Precision */
-    FP16* hp = malloc(sizeof(FP16));
-
-    /* bfloat16 */
-    BF16* bf = malloc(sizeof(BF16));
-
-    memcpy(&dn, &n, sizeof(n));
-
-    /* Double Precision Calculation */
-    dp->sign = (dn & D_SIGN_MASK) >> (D_EXP_BIT + D_MANT_BIT);
-    dp->exp = (dn & D_EXP_MASK) >> D_MANT_BIT;
-    dp->mant = dn & D_MANT_MASK;
-
-    /* Single Precision Calculation */
     sp->sign = dp->sign;
-    sp->mant = (uint32_t)shiftRound(dp->mant, D_MANT_BIT - S_MANT_BIT);
+    // sp->mant = (uint32_t)shiftRound(dp->mant, D_MANT_BIT - S_MANT_BIT);
+    sp->mant = (uint32_t)(dp->mant >> (D_MANT_BIT - S_MANT_BIT));
     if(dp->exp == 0){
         // 0, subnormal number -> 0
         sp->exp = 0u;
@@ -473,9 +438,15 @@ void convert(double n){
         sp->exp = (uint8_t)(dp->exp - D_BIAS + S_BIAS);
     }
 
-    /* Half Precision Calculation */
+    return sp;
+}
+
+FP16* DP2HP(FP64* dp){
+    FP16* hp = malloc(sizeof(FP16));
+
     hp->sign = dp->sign;
-    hp->mant = (uint16_t)shiftRound(dp->mant, D_MANT_BIT - H_MANT_BIT);
+    // hp->mant = (uint16_t)shiftRound(dp->mant, D_MANT_BIT - H_MANT_BIT);
+    hp->mant = (uint16_t)(dp->mant >> (D_MANT_BIT - H_SIGN_BIT));
     if(dp->exp == 0){
         // 0, subnormal number -> 0
         hp->exp = 0u;
@@ -514,9 +485,15 @@ void convert(double n){
         hp->exp = (uint8_t)(dp->exp - D_BIAS + H_BIAS);
     }
 
-    /* bfloat16 Calculation */
+    return hp;
+}
+
+BF16* DP2BF(FP64* dp){
+    BF16* bf = malloc(sizeof(BF16));
+
     bf->sign = dp->sign;
-    bf->mant = (uint8_t)shiftRound(dp->mant, D_MANT_BIT - B_MANT_BIT);
+    // bf->mant = (uint8_t)shiftRound(dp->mant, D_MANT_BIT - B_MANT_BIT);
+    bf->mant = (uint8_t)(dp->mant >> (D_MANT_BIT - B_MANT_BIT));
     if(dp->exp == 0){
         // 0, subnormal number -> 0
         bf->exp = 0u;
@@ -554,6 +531,67 @@ void convert(double n){
     else{
         bf->exp = (uint8_t)(dp->exp - D_BIAS + B_BIAS);
     }
+
+    return bf;
+}
+
+FP32* BF2SP(BF16* bf){
+    FP32* sp = malloc(sizeof(FP32));
+
+    sp->sign = bf->sign;
+    sp->exp = bf->exp;
+    sp->mant = (uint32_t)bf->mant << (S_MANT_BIT - B_MANT_BIT);
+
+    return sp;
+}
+
+FP32* HP2SP(FP16* hp){
+    FP32* sp = malloc(sizeof(FP32));
+
+    sp->sign = hp->sign;
+    sp->exp = hp->exp - H_BIAS + S_BIAS;
+    sp->mant = (uint32_t)hp->mant << (S_MANT_BIT - H_MANT_BIT);
+
+    if(hp->exp == 0u){
+        if(hp->mant == 0u){
+            // Underflow
+            sp->exp = 0u;
+            sp->mant = 0u;
+        }
+        else{
+            // Subnormal number
+            while(!(sp->mant & S_MANT_NAN)){
+                sp->mant <<= 1;
+                sp->exp--;
+            }
+            sp->mant <<= 1;
+            sp->mant = sp->mant & H2S_MASK;
+        }
+    }
+    else if(hp->exp == (H_EXP_MASK + H_BIAS)){
+        sp->exp = S_EXP_MAX + S_BIAS;
+        if(hp->mant == H_MANT_NAN){
+            // NaN
+            sp->mant = S_MANT_NAN;
+        }
+        else{
+            // Inf
+            sp->mant = 0u;
+        }
+    }
+
+    return sp;
+}
+
+void convert(double n){
+    uint64_t dn;
+
+    memcpy(&dn, &n, sizeof(n));
+
+    FP64* dp = disassembleHexDP(dn);
+    FP32* sp = DP2SP(dp);
+    FP16* hp = DP2HP(dp);
+    BF16* bf = DP2BF(dp);
 
     printHalfPrecision(hp);
     printSinglePrecision(sp);
