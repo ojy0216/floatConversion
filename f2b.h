@@ -72,6 +72,7 @@
 
 #define B2D_MASK    0x000FE00000000000
 #define H2D_MASK    0x000FFC0000000000
+#define S2D_MASK    0x000FFFFFE0000000
 
 typedef struct _BF16{
     uint8_t sign;

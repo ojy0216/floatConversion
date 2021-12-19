@@ -347,6 +347,7 @@ double hexHP2Double(uint16_t n){
 }
 
 double hexSP2Double(uint32_t n){
+    // TODO
     FP32* sp = disassembleSP(n);
     FP64* dp = malloc(sizeof(FP64));
     uint64_t d_bin;
@@ -355,6 +356,34 @@ double hexSP2Double(uint32_t n){
     dp->sign = sp->sign;
     dp->exp = (uint16_t)sp->exp - S_BIAS + D_BIAS;
     dp->mant = (uint64_t)sp->mant << (D_MANT_BIT - S_MANT_BIT);
+
+    if(sp->exp == 0u){
+        if(sp->mant == 0u){
+            // 0
+            dp->exp = 0u;
+            dp->mant = 0lu;
+        }
+        else{
+            // Subnormal number
+            while(!(dp->mant & D_MANT_NAN)){
+                dp->mant <<= 1;
+                dp->exp--;
+            }
+            dp->mant <<= 1;
+            dp->mant = dp->mant & S2D_MASK;
+        }
+    }
+    else if(sp->exp == (S_EXP_MAX + S_BIAS)){
+        dp->exp = D_EXP_MAX + D_BIAS;
+        if(sp->mant == S_MANT_NAN){
+            // NaN
+            dp->mant = D_MANT_NAN;
+        }
+        else{
+            // Inf
+            dp->mant = 0lu;
+        }
+    }
 
     free(sp);
 
