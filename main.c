@@ -39,19 +39,15 @@ int main(int argc, char* argv[]){
     	while(-1 != (param_opt = getopt(argc, argv, "bhsd"))){
         	switch(param_opt){
             	case 'b':
-                    printf("-b\n");
                 	is_bf = TRUE;
                 	break;
             	case 'h':
-                    printf("-h\n");
                 	is_hp = TRUE;
                 	break;
             	case 's':
-                    printf("-s\n");
                 	is_sp = TRUE;
                 	break;
             	case 'd':
-                    printf("-d\n");
                 	is_dp = TRUE;
                 	break;
             	case '?':
