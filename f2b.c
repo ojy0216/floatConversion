@@ -12,15 +12,16 @@ uint64_t shiftRound(uint64_t n, int shift){
     uint64_t result = n >> shift;
 
     // Using only 1 extra bit 
+    /*
     if(shift == 0)
         return result;
 
     uint64_t mask = 1lu << (shift - 1);
     if((n & mask) >> (shift - 1))
         result += 1;
+    */
 
     // Using GRS bits, round to nearest even
-    /*
     uint64_t guard_mask, round_mask, sticky_mask;
     uint64_t grs_mask, lsb_mask;
     uint64_t grs, lsb;
@@ -57,7 +58,6 @@ uint64_t shiftRound(uint64_t n, int shift){
         if(lsb)
             result += 1;
     }
-    */
 
     return result;
 }
@@ -398,8 +398,7 @@ FP32* DP2SP(FP64* dp){
     FP32* sp = malloc(sizeof(FP32));
 
     sp->sign = dp->sign;
-    // sp->mant = (uint32_t)shiftRound(dp->mant, D_MANT_BIT - S_MANT_BIT);
-    sp->mant = (uint32_t)(dp->mant >> (D_MANT_BIT - S_MANT_BIT));
+    sp->mant = (uint32_t)shiftRound(dp->mant, D_MANT_BIT - S_MANT_BIT);
     if(dp->exp == 0){
         // 0, subnormal number -> 0
         sp->exp = 0u;
@@ -445,8 +444,7 @@ FP16* DP2HP(FP64* dp){
     FP16* hp = malloc(sizeof(FP16));
 
     hp->sign = dp->sign;
-    // hp->mant = (uint16_t)shiftRound(dp->mant, D_MANT_BIT - H_MANT_BIT);
-    hp->mant = (uint16_t)(dp->mant >> (D_MANT_BIT - H_SIGN_BIT));
+    hp->mant = (uint16_t)shiftRound(dp->mant, D_MANT_BIT - H_MANT_BIT);
     if(dp->exp == 0){
         // 0, subnormal number -> 0
         hp->exp = 0u;
@@ -492,8 +490,7 @@ BF16* DP2BF(FP64* dp){
     BF16* bf = malloc(sizeof(BF16));
 
     bf->sign = dp->sign;
-    // bf->mant = (uint8_t)shiftRound(dp->mant, D_MANT_BIT - B_MANT_BIT);
-    bf->mant = (uint8_t)(dp->mant >> (D_MANT_BIT - B_MANT_BIT));
+    bf->mant = (uint8_t)shiftRound(dp->mant, D_MANT_BIT - B_MANT_BIT);
     if(dp->exp == 0){
         // 0, subnormal number -> 0
         bf->exp = 0u;
