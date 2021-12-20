@@ -166,7 +166,23 @@ void printDoublePrecision(FP64* dp){
         printf("%u", (dp->mant & ((uint64_t)1 << (D_MANT_BIT - 1 - i))) != 0);
     printf(" (%lu)\n", dp->mant);
 
-    printf("0x%016lX\n\n", dn);
+    printf("0x%016lX\n", dn);
+
+    if(dp->exp == D_EXP_MAX + D_BIAS){
+        if(dp->sign){
+            printf("-");
+        }
+        if(dp->mant == 0lu){
+            printf("inf\n");
+        }
+        else if(dp->mant == D_MANT_NAN){
+            printf("nan\n");
+        }
+    }
+    else if(dp->exp == 0u && dp->mant == 0lu){
+        printf("0\n");
+    }
+    printf("\n");
 }
 
 BF16* disassembleHexBF(uint16_t n){
