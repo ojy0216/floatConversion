@@ -559,6 +559,7 @@ FP32* BF2SP(BF16* bf){
 }
 
 FP32* HP2SP(FP16* hp){
+	// TODO
     FP32* sp = malloc(sizeof(FP32));
 
     sp->sign = hp->sign;
@@ -581,7 +582,7 @@ FP32* HP2SP(FP16* hp){
             sp->mant = sp->mant & H2S_MASK;
         }
     }
-    else if(hp->exp == (H_EXP_MASK + H_BIAS)){
+    else if(hp->exp == (H_EXP_MAX + H_BIAS)){
         sp->exp = S_EXP_MAX + S_BIAS;
         if(hp->mant == H_MANT_NAN){
             // NaN
