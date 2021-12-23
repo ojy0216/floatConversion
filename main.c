@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include "f2b.h"
+#include "fConvert.h"
 #include "atoh.h"
 #include "warning.h"
 

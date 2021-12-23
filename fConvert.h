@@ -1,5 +1,5 @@
-#ifndef __F2B_H__
-#define __F2B_H__
+#ifndef __F_CONVERT_H__
+#define __F_CONVERT_H__
 
 #include <stdint.h>
 #include <stdio.h>
