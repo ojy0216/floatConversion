@@ -1,9 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
 #include "f2b.h"
-#include "warning.h"
 
 uint64_t shiftRound(uint64_t n, int shift){
     if(shift < 0){

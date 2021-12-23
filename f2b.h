@@ -2,6 +2,11 @@
 #define __F2B_H__
 
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include "warning.h"
 
 /* bfloat16 */
 #define B_SIGN_BIT  1
