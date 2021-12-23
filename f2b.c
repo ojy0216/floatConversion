@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "f2b.h"
+#include "warning.h"
 
 uint64_t shiftRound(uint64_t n, int shift){
     if(shift < 0){
@@ -245,6 +247,14 @@ float hexSP2Float(uint32_t n){
 
 double hexBF2Double(uint16_t n){
     BF16* bf = disassembleHexBF(n);
+
+    if(bf->exp == (B_EXP_MAX + B_BIAS) && bf->mant != B_MANT_NAN && bf->mant != 0u){
+        WARNING
+        printf("Given input is not a IEEE-754 standard, but it will be interpreted as nan.\n");
+        free(bf);
+        return NAN;
+    }
+
     FP64* dp = malloc(sizeof(FP64));
     uint64_t d_bin;
     double d;
@@ -294,6 +304,14 @@ double hexBF2Double(uint16_t n){
 
 double hexHP2Double(uint16_t n){
     FP16* hp = disassembleHexHP(n);
+
+    if(hp->exp == (H_EXP_MAX + H_BIAS) && hp->mant != H_MANT_NAN && hp->mant != 0u){
+        WARNING
+        printf("Given input is not a IEEE-754 standard, but it will be interpreted as nan.\n");
+        free(hp);
+        return NAN;
+    }
+
     FP64* dp = malloc(sizeof(FP64));
     uint64_t d_bin;
     double d;
@@ -343,6 +361,14 @@ double hexHP2Double(uint16_t n){
 
 double hexSP2Double(uint32_t n){
     FP32* sp = disassembleHexSP(n);
+
+    if(sp->exp == (S_EXP_MAX + S_BIAS) && sp->mant != S_MANT_NAN && sp->mant != 0u){
+        WARNING
+        printf("Given input is not a IEEE-754 standard, but it will be interpreted as nan.\n");
+        free(sp);
+        return NAN;
+    }
+
     FP64* dp = malloc(sizeof(FP64));
     uint64_t d_bin;
     double d;
@@ -391,6 +417,15 @@ double hexSP2Double(uint32_t n){
 }
 
 double hexDP2Double(uint64_t n){
+    FP64* dp = disassembleHexDP(n);
+
+    if(dp->exp == (D_EXP_MAX + D_BIAS) && dp->mant != D_MANT_NAN && dp->mant != 0lu){
+        WARNING
+        printf("Given input is not a IEEE-754 standard, but it will be interpreted as nan.\n");
+        free(dp);
+        return NAN;
+    }
+
     double d;
 
     memcpy(&d, &n, sizeof(d));
