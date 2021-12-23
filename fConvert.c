@@ -246,8 +246,14 @@ double hexBF2Double(uint16_t n){
     if(bf->exp == (B_EXP_MAX + B_BIAS) && bf->mant != B_MANT_NAN && bf->mant != 0u){
         WARNING
         printf("Given input is not a IEEE-754 standard, but it will be interpreted as nan.\n");
-        free(bf);
-        return NAN;
+		if(bf->sign){
+			free(bf);
+			return -NAN;
+		}
+		else{
+        	free(bf);
+        	return NAN;
+		}
     }
 
     FP64* dp = malloc(sizeof(FP64));
@@ -303,8 +309,14 @@ double hexHP2Double(uint16_t n){
     if(hp->exp == (H_EXP_MAX + H_BIAS) && hp->mant != H_MANT_NAN && hp->mant != 0u){
         WARNING
         printf("Given input is not a IEEE-754 standard, but it will be interpreted as nan.\n");
-        free(hp);
-        return NAN;
+		if(hp->sign){
+			free(hp);
+			return -NAN;
+		}
+		else{
+        	free(hp);
+        	return NAN;
+		}
     }
 
     FP64* dp = malloc(sizeof(FP64));
@@ -360,8 +372,14 @@ double hexSP2Double(uint32_t n){
     if(sp->exp == (S_EXP_MAX + S_BIAS) && sp->mant != S_MANT_NAN && sp->mant != 0u){
         WARNING
         printf("Given input is not a IEEE-754 standard, but it will be interpreted as nan.\n");
-        free(sp);
-        return NAN;
+		if(sp->sign){
+	        free(sp);
+   	    	return -NAN;
+		}
+		else{
+        	free(sp);
+        	return NAN;
+		}
     }
 
     FP64* dp = malloc(sizeof(FP64));
@@ -417,8 +435,14 @@ double hexDP2Double(uint64_t n){
     if(dp->exp == (D_EXP_MAX + D_BIAS) && dp->mant != D_MANT_NAN && dp->mant != 0lu){
         WARNING
         printf("Given input is not a IEEE-754 standard, but it will be interpreted as nan.\n");
-        free(dp);
-        return NAN;
+		if(dp->sign){
+			free(dp);
+			return -NAN;
+		}
+		else{
+        	free(dp);
+        	return NAN;
+		}
     }
 
     double d;
